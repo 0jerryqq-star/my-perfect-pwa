@@ -51,7 +51,7 @@ function calcWork(start, end) {
 }
 
 // 排休計算：排休時段與「標準工時區間（08:00-12:00、13:00-17:00）」的重疊
-// 部分算排休時數，其餘標準工時區間內未重疊的時段視為當日上工。
+// 部分算排休時數，其餘標準工時區間內未重疊的時段視為當日出工。
 // 預設整段 08:00-17:00 都算排休 = 整日排休。
 function calcOff(start, end) {
   const s = toMinutes(start);
@@ -388,7 +388,7 @@ export default function AttendanceCalendar() {
           --off: #A3312A;
           --holiday: #3E6E58;
           --sun: #9A4A3C;
-          --gold-wash: #F1E3C0;
+          --gold-wash: #E8D19B;
           font-family: 'Noto Sans TC', sans-serif;
           color: var(--ink);
           max-width: 420px;
@@ -556,7 +556,7 @@ export default function AttendanceCalendar() {
             <ChevronRight size={29} />
           </button>
         </div>
-        <p className="ac-hint">點選日期，標記上工、排休或公休</p>
+        <p className="ac-hint">點選日期，標記出工、排休或公休</p>
 
         <div className="ac-weekrow">
           {WEEKDAYS.map((w, i) => (
@@ -610,7 +610,7 @@ export default function AttendanceCalendar() {
         <div className="ac-stats">
           <div className="ac-stat">
             <div className="ac-stat-num n-work">{loading ? "–" : fmt(stats.workDaysSum, 3)}</div>
-            <div className="ac-stat-label">上工</div>
+            <div className="ac-stat-label">出工</div>
           </div>
           <div className="ac-stat">
             <div className="ac-stat-num n-off">{loading ? "–" : fmt(stats.offSum, 2)}</div>
@@ -650,7 +650,7 @@ export default function AttendanceCalendar() {
                 未排定
               </button>
               <button className={`seg-work ${draftStatus === "work" ? "is-active" : ""}`} onClick={() => selectStatus("work")}>
-                上工
+                出工
               </button>
               <button className={`seg-off ${draftStatus === "off" ? "is-active" : ""}`} onClick={() => selectStatus("off")}>
                 排休
@@ -793,7 +793,7 @@ export default function AttendanceCalendar() {
                   ) : (
                     <>
                       排休 <b>{fmt(offPreview.offHours, 2)}</b> 小時（<b>{fmt(offPreview.offFraction, 3)}</b> 天）
-                      ・其餘上工 <b>{fmt(offPreview.workHours, 2)}</b> 小時（<b>{fmt(offPreview.dayFraction, 3)}</b> 天）
+                      ・其餘出工 <b>{fmt(offPreview.workHours, 2)}</b> 小時（<b>{fmt(offPreview.dayFraction, 3)}</b> 天）
                     </>
                   )
                 ) : (
@@ -803,7 +803,7 @@ export default function AttendanceCalendar() {
             )}
             {draftStatus === "off" && (
               <p className="ac-rule-note">
-                點「整日」可切換整天排休／自訂時段；未列入排休、落在 08:00–17:00（扣除午休）的時間視為當日上工
+                點「整日」可切換整天排休／自訂時段；未列入排休、落在 08:00–17:00（扣除午休）的時間視為當日出工
               </p>
             )}
 
@@ -815,7 +815,7 @@ export default function AttendanceCalendar() {
                   ) : (
                     <>
                       公休 <b>{fmt(offPreview.offHours, 2)}</b> 小時（<b>{fmt(offPreview.offFraction, 3)}</b> 天）
-                      ・其餘上工 <b>{fmt(offPreview.workHours, 2)}</b> 小時（<b>{fmt(offPreview.dayFraction, 3)}</b> 天）
+                      ・其餘出工 <b>{fmt(offPreview.workHours, 2)}</b> 小時（<b>{fmt(offPreview.dayFraction, 3)}</b> 天）
                     </>
                   )
                 ) : (
@@ -825,7 +825,7 @@ export default function AttendanceCalendar() {
             )}
             {draftStatus === "holiday" && (
               <p className="ac-rule-note">
-                點「整日」可切換整天公休／自訂時段；未列入公休、落在 08:00–17:00（扣除午休）的時間視為當日上工
+                點「整日」可切換整天公休／自訂時段；未列入公休、落在 08:00–17:00（扣除午休）的時間視為當日出工
               </p>
             )}
 
