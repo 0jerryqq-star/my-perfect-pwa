@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { ChevronLeft, ChevronRight, X, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Download, Upload } from "lucide-react";
 
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
 const WORK_START = "08:00";
@@ -96,6 +96,7 @@ export default function AttendanceCalendar() {
   const [draftStart, setDraftStart] = useState(WORK_START);
   const [draftEnd, setDraftEnd] = useState(WORK_END);
   const [saving, setSaving] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(true);
   const captureRef = useRef(null);
 
   const key = monthKey(year, monthIndex);
@@ -326,6 +327,87 @@ export default function AttendanceCalendar() {
     (draftStatus === "work" && !workPreview.valid) ||
     ((draftStatus === "off" || draftStatus === "holiday") && !offPreview.valid);
 
+  // 向瀏覽器要求「持久儲存」，降低空間不足時資料被系統清掉的機率（不保證一定成功）
+  useEffect(() => {
+    try {
+      if (navigator.storage && navigator.storage.persist) {
+        navigator.storage.persist().catch(() => {});
+      }
+    } catch (e) {
+      // 不支援就略過
+    }
+    // 預先載入存圖用的套件，讓離線快取先存起來，之後沒網路也能存圖
+    import("html2canvas").catch(() => {});
+  }, []);
+
+  const importRef = useRef(null);
+
+  // 備份：把所有月份的資料匯出成一個 JSON 檔
+  const handleExportBackup = async () => {
+    const data = {};
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith("attendance-calendar:")) {
+          data[k] = JSON.parse(localStorage.getItem(k));
+        }
+      }
+    } catch (e) {
+      alert("讀取資料失敗，無法備份");
+      return;
+    }
+    if (Object.keys(data).length === 0) {
+      alert("目前沒有可備份的資料");
+      return;
+    }
+    const d = new Date();
+    const fileName = `我愛鐵支撐-備份-${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}.json`;
+    const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+    const file = new File([blob], fileName, { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: fileName });
+      } catch (e) {
+        // 使用者取消分享
+      }
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  // 還原：選擇之前備份的 JSON 檔，寫回本機儲存
+  const handleImportBackup = (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        const keys = Object.keys(data).filter((k) => k.startsWith("attendance-calendar:"));
+        if (keys.length === 0) {
+          alert("這個檔案不是有效的備份檔");
+          return;
+        }
+        if (!window.confirm(`將還原 ${keys.length} 個月份的資料，會覆蓋目前相同月份的內容，確定嗎？`)) return;
+        keys.forEach((k) => localStorage.setItem(k, JSON.stringify(data[k])));
+        const current = localStorage.getItem(key);
+        setStatusMap(current ? JSON.parse(current) : {});
+        alert("還原完成");
+      } catch (err) {
+        alert("還原失敗，檔案格式不正確");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const handleSaveImage = async () => {
     if (!captureRef.current || saving) return;
     setSaving(true);
@@ -537,6 +619,19 @@ export default function AttendanceCalendar() {
         }
         .ac-save-image:disabled { opacity:.5; cursor:not-allowed; }
         .ac-save-image:not(:disabled):hover { opacity:.9; }
+
+        .ac-backup-row { display:flex; gap:10px; margin-top:10px; }
+        .ac-backup-btn {
+          flex:1; padding:14px 8px; border-radius:10px; border:1.5px solid var(--ink); background:transparent; color:var(--ink);
+          font-family:'Noto Sans TC', sans-serif; font-size:17px; font-weight:700; cursor:pointer;
+          display:flex; align-items:center; justify-content:center; gap:8px;
+        }
+        .ac-backup-btn:hover { background: var(--paper-edge); }
+
+        .ac-disclaimer-backdrop { z-index: 100; }
+        .ac-disclaimer-title { font-family:'Noto Serif TC', serif; font-weight:900; font-size:28px; text-align:center; margin-bottom:16px; }
+        .ac-disclaimer-list { margin:0 0 22px; padding-left:26px; font-size:18px; line-height:1.7; color:var(--ink); }
+        .ac-disclaimer-list li { margin-bottom:10px; }
       `}</style>
 
       <div ref={captureRef} className="ac-capture">
@@ -840,6 +935,44 @@ export default function AttendanceCalendar() {
         <Download size={16} />
         {saving ? "產生圖片中…" : "存圖"}
       </button>
+
+      <div className="ac-backup-row">
+        <button className="ac-backup-btn" onClick={handleExportBackup}>
+          <Download size={16} />
+          備份資料
+        </button>
+        <button className="ac-backup-btn" onClick={() => importRef.current && importRef.current.click()}>
+          <Upload size={16} />
+          還原資料
+        </button>
+        <input
+          ref={importRef}
+          type="file"
+          accept=".json,application/json"
+          style={{ display: "none" }}
+          onChange={handleImportBackup}
+        />
+      </div>
+
+      {showDisclaimer && (
+        <div className="ac-backdrop ac-disclaimer-backdrop">
+          <div className="ac-sheet ac-disclaimer" role="dialog" aria-modal="true" aria-label="免責聲明">
+            <div className="ac-disclaimer-title">免責聲明</div>
+            <ol className="ac-disclaimer-list">
+              <li>本 App 由棋傑二次反坎製作。</li>
+              <li>App 內的天數統計僅供參考，非官方資料，一切以官方公告為準。</li>
+              <li>所有個人資料皆不收集、不上傳，僅儲存在您自己的手機裡。</li>
+              <li>
+                請養成定期「存圖」與「備份資料」的好習慣，以免網頁暫存記憶體被清空導致資料遺失；
+                因資料遺失所造成的一切損失，本人概不負責。
+              </li>
+            </ol>
+            <button className="ac-confirm" onClick={() => setShowDisclaimer(false)}>
+              我知道了
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
