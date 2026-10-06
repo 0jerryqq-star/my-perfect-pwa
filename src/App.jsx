@@ -649,9 +649,9 @@ export default function AttendanceCalendar() {
         .ac-disclaimer-backdrop { z-index: 100; }
         .ac-disclaimer-title { font-family:'Noto Serif TC', serif; font-weight:900; font-size:28px; text-align:center; margin-bottom:16px; }
         .ac-disclaimer { max-height:88vh; overflow-y:auto; }
-        .ac-card-box { border:1.5px solid var(--ink); border-radius:12px; padding:14px 14px 4px; margin-bottom:14px; background: var(--paper-edge); }
+        .ac-card-box { border:1.5px solid var(--ink); border-radius:12px; padding:12px 10px 2px; margin-bottom:12px; background: var(--paper-edge); }
         .ac-card-title { font-family:'Noto Serif TC', serif; font-weight:900; font-size:22px; margin-bottom:8px; }
-        .ac-disclaimer-list { margin:0 0 12px; padding-left:26px; font-size:18px; line-height:1.7; color:var(--ink); }
+        .ac-disclaimer-list { margin:0 0 10px; padding-left:22px; font-size:16px; line-height:1.6; color:var(--ink); text-align:justify; line-break:strict; }
         .ac-disclaimer-list li { margin-bottom:10px; }
         .ac-dontshow { display:flex; align-items:center; justify-content:center; gap:12px; margin:6px 0 14px; font-size:22px; color:var(--ink); cursor:pointer; }
         .ac-dontshow input { width:28px; height:28px; accent-color: var(--work); cursor:pointer; margin:0; }
@@ -727,9 +727,17 @@ export default function AttendanceCalendar() {
 
         <div className="ac-stats">
           <div className="ac-stat">
-            <div className="ac-stat-num n-work">{loading ? "–" : fmt(stats.workDaysSum, 3)}</div>
+            {(() => {
+              const s = loading ? "–" : fmt(stats.workDaysSum, 4);
+              const size = s.length <= 4 ? 34 : s.length === 5 ? 29 : s.length === 6 ? 24 : 21;
+              return (
+                <div className="ac-stat-num n-work" style={{ fontSize: size }}>
+                  {s}
+                </div>
+              );
+            })()}
             {!loading && stats.overtimeSum > 0 && (
-              <div className="ac-stat-sub">{fmt(stats.workDaysSum + stats.overtimeSum / 8, 2)}天</div>
+              <div className="ac-stat-sub">{fmt(stats.workDaysSum + stats.overtimeSum / 8, 4)}天</div>
             )}
             <div className="ac-stat-label">出工</div>
           </div>
