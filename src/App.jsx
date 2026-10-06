@@ -1004,7 +1004,7 @@ export default function AttendanceCalendar() {
               <ol className="ac-disclaimer-list">
                 <li>公假、事假、工傷假、公休會包含在最低出勤的 22 天裡，但不計薪。</li>
                 <li>每月加班時數 8 小時為 1 天。</li>
-                <li>每月出工滿 25 日，且無遲到、病假，為全勤。</li>
+                <li>每月出工滿 25 日，且無遲到、病假、臨時請假，為全勤。</li>
               </ol>
             </div>
             {showRules && !showDisclaimer ? (
