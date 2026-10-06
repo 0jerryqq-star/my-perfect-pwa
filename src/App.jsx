@@ -105,6 +105,7 @@ export default function AttendanceCalendar() {
     }
   });
   const [dontShowAgain, setDontShowAgain] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   const handleConfirmDisclaimer = () => {
     if (dontShowAgain) {
       try {
@@ -647,7 +648,10 @@ export default function AttendanceCalendar() {
 
         .ac-disclaimer-backdrop { z-index: 100; }
         .ac-disclaimer-title { font-family:'Noto Serif TC', serif; font-weight:900; font-size:28px; text-align:center; margin-bottom:16px; }
-        .ac-disclaimer-list { margin:0 0 22px; padding-left:26px; font-size:18px; line-height:1.7; color:var(--ink); }
+        .ac-disclaimer { max-height:88vh; overflow-y:auto; }
+        .ac-card-box { border:1.5px solid var(--ink); border-radius:12px; padding:14px 14px 4px; margin-bottom:14px; background: var(--paper-edge); }
+        .ac-card-title { font-family:'Noto Serif TC', serif; font-weight:900; font-size:22px; margin-bottom:8px; }
+        .ac-disclaimer-list { margin:0 0 12px; padding-left:26px; font-size:18px; line-height:1.7; color:var(--ink); }
         .ac-disclaimer-list li { margin-bottom:10px; }
         .ac-dontshow { display:flex; align-items:center; justify-content:center; gap:12px; margin:6px 0 14px; font-size:22px; color:var(--ink); cursor:pointer; }
         .ac-dontshow input { width:28px; height:28px; accent-color: var(--work); cursor:pointer; margin:0; }
@@ -967,6 +971,9 @@ export default function AttendanceCalendar() {
           <Upload size={16} />
           還原資料
         </button>
+        <button className="ac-backup-btn" onClick={() => setShowRules(true)}>
+          規則
+        </button>
         <input
           ref={importRef}
           type="file"
@@ -976,30 +983,49 @@ export default function AttendanceCalendar() {
         />
       </div>
 
-      {showDisclaimer && (
+      {(showDisclaimer || showRules) && (
         <div className="ac-backdrop ac-disclaimer-backdrop">
-          <div className="ac-sheet ac-disclaimer" role="dialog" aria-modal="true" aria-label="免責聲明">
-            <div className="ac-disclaimer-title">免責聲明</div>
-            <ol className="ac-disclaimer-list">
-              <li>本 App 由棋傑二次反坎製作。</li>
-              <li>App 內的天數統計僅供參考，非官方資料，一切以官方公告為準。</li>
-              <li>所有個人資料皆不收集、不上傳，僅儲存在您自己的手機裡。</li>
-              <li>
-                請養成定期「存圖」與「備份資料」的好習慣，以免網頁暫存記憶體被清空導致資料遺失；
-                因資料遺失所造成的一切損失，本人概不負責。
-              </li>
-            </ol>
-            <label className="ac-dontshow">
-              <input
-                type="checkbox"
-                checked={dontShowAgain}
-                onChange={(e) => setDontShowAgain(e.target.checked)}
-              />
-              <span>不再顯示</span>
-            </label>
-            <button className="ac-confirm" onClick={handleConfirmDisclaimer}>
-              我知道了
-            </button>
+          <div className="ac-sheet ac-disclaimer" role="dialog" aria-modal="true" aria-label="免責聲明與出勤數規則">
+            <div className="ac-disclaimer-title">免責聲明與出勤數規則</div>
+            <div className="ac-card-box">
+              <div className="ac-card-title">免責聲明</div>
+              <ol className="ac-disclaimer-list">
+                <li>本 App 由棋傑二次反坎製作。</li>
+                <li>App 內的天數統計僅供參考，非官方資料，一切以官方公告為準。</li>
+                <li>所有個人資料皆不收集、不上傳，僅儲存在您自己的手機裡。</li>
+                <li>
+                  請養成定期「存圖」與「備份資料」的好習慣，以免網頁暫存記憶體被清空導致資料遺失；
+                  因資料遺失所造成的一切損失，本人概不負責。
+                </li>
+              </ol>
+            </div>
+            <div className="ac-card-box">
+              <div className="ac-card-title">出勤數規則</div>
+              <ol className="ac-disclaimer-list">
+                <li>公假、事假、工傷假、公休會包含在最低出勤的 22 天裡，但不計薪。</li>
+                <li>每月加班時數 8 小時為 1 天。</li>
+                <li>每月出工滿 25 日，且無遲到、病假，為全勤。</li>
+              </ol>
+            </div>
+            {showRules && !showDisclaimer ? (
+              <button className="ac-confirm" onClick={() => setShowRules(false)}>
+                關閉
+              </button>
+            ) : (
+              <>
+                <label className="ac-dontshow">
+                  <input
+                    type="checkbox"
+                    checked={dontShowAgain}
+                    onChange={(e) => setDontShowAgain(e.target.checked)}
+                  />
+                  <span>不再顯示</span>
+                </label>
+                <button className="ac-confirm" onClick={handleConfirmDisclaimer}>
+                  我知道了
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
