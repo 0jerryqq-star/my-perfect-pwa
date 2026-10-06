@@ -96,7 +96,23 @@ export default function AttendanceCalendar() {
   const [draftStart, setDraftStart] = useState(WORK_START);
   const [draftEnd, setDraftEnd] = useState(WORK_END);
   const [saving, setSaving] = useState(false);
-  const [showDisclaimer, setShowDisclaimer] = useState(true);
+  const DISCLAIMER_KEY = "attendance-calendar:disclaimer-hidden";
+  const [showDisclaimer, setShowDisclaimer] = useState(() => {
+    try {
+      return localStorage.getItem(DISCLAIMER_KEY) !== "1";
+    } catch {
+      return true;
+    }
+  });
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+  const handleConfirmDisclaimer = () => {
+    if (dontShowAgain) {
+      try {
+        localStorage.setItem(DISCLAIMER_KEY, "1");
+      } catch {}
+    }
+    setShowDisclaimer(false);
+  };
   const captureRef = useRef(null);
 
   const key = monthKey(year, monthIndex);
@@ -538,6 +554,7 @@ export default function AttendanceCalendar() {
         .ac-stat:last-child { border-right:none; }
         .ac-stat-num { font-family:'Noto Serif TC', serif; font-weight:700; font-size:34px; line-height:1; color:var(--ink); }
         .ac-stat-num.n-work { color: var(--work); }
+        .ac-stat-sub { font-size:16px; line-height:1; margin-top:5px; color:var(--work); font-weight:700; }
         .ac-stat-num.n-off { color: var(--off); }
         .ac-stat-num.n-holiday { color: var(--holiday); }
         .ac-stat-num.n-unset { color: var(--ink-soft); }
@@ -632,6 +649,8 @@ export default function AttendanceCalendar() {
         .ac-disclaimer-title { font-family:'Noto Serif TC', serif; font-weight:900; font-size:28px; text-align:center; margin-bottom:16px; }
         .ac-disclaimer-list { margin:0 0 22px; padding-left:26px; font-size:18px; line-height:1.7; color:var(--ink); }
         .ac-disclaimer-list li { margin-bottom:10px; }
+        .ac-dontshow { display:flex; align-items:center; justify-content:center; gap:12px; margin:6px 0 14px; font-size:22px; color:var(--ink); cursor:pointer; }
+        .ac-dontshow input { width:28px; height:28px; accent-color: var(--work); cursor:pointer; margin:0; }
       `}</style>
 
       <div ref={captureRef} className="ac-capture">
@@ -705,6 +724,9 @@ export default function AttendanceCalendar() {
         <div className="ac-stats">
           <div className="ac-stat">
             <div className="ac-stat-num n-work">{loading ? "–" : fmt(stats.workDaysSum, 3)}</div>
+            {!loading && stats.overtimeSum > 0 && (
+              <div className="ac-stat-sub">{fmt(stats.workDaysSum + stats.overtimeSum / 8, 2)}天</div>
+            )}
             <div className="ac-stat-label">出工</div>
           </div>
           <div className="ac-stat">
@@ -967,7 +989,15 @@ export default function AttendanceCalendar() {
                 因資料遺失所造成的一切損失，本人概不負責。
               </li>
             </ol>
-            <button className="ac-confirm" onClick={() => setShowDisclaimer(false)}>
+            <label className="ac-dontshow">
+              <input
+                type="checkbox"
+                checked={dontShowAgain}
+                onChange={(e) => setDontShowAgain(e.target.checked)}
+              />
+              <span>不再顯示</span>
+            </label>
+            <button className="ac-confirm" onClick={handleConfirmDisclaimer}>
               我知道了
             </button>
           </div>
