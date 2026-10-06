@@ -640,7 +640,7 @@ export default function AttendanceCalendar() {
 
         .ac-backup-row { display:flex; gap:10px; margin-top:10px; }
         .ac-backup-btn {
-          flex:1; padding:14px 8px; border-radius:10px; border:1.5px solid var(--ink); background:transparent; color:var(--ink);
+          flex:1; padding:14px 8px; border-radius:10px; border:1.5px solid var(--ink); background:var(--paper); color:var(--ink); -webkit-appearance:none; appearance:none;
           font-family:'Noto Sans TC', sans-serif; font-size:17px; font-weight:700; cursor:pointer;
           display:flex; align-items:center; justify-content:center; gap:8px;
         }
